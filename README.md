@@ -4,7 +4,7 @@
 
 ## Integrantes
 
-* [Nombre Integrante]
+* Gerald Espinoza Tapia
 * Ignacio Carrillo
 * Benjamin Velasquez
 * Benjamín Rodríguez Pavez
