@@ -1,4 +1,4 @@
-# Sistema Distribuido de Reservas "Turbus" 🚌
+# Sistema Distribuido de Reservas "Turbus" 
 
 **Proyecto Parcial - ICI-4344 Computación Paralela y Distribuida | PUCV**
 
