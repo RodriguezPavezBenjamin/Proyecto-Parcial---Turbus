@@ -20,6 +20,8 @@ public class ReservaServer {
  
     public static final int PUERTO    = 9002;
     private static final int POOL_SIZE = 20;
+    private static final String HOST_BUSQUEDA = "localhost";
+    private static final int PUERTO_BUSQUEDA = 9001;
  
     private final ConcurrentHashMap<String, Reserva> reservas =
             new ConcurrentHashMap<>();
@@ -183,6 +185,8 @@ public class ReservaServer {
             r.setMontoPagado(monto);
             System.out.printf("[ReservaServer] Pago APROBADO: %s $%.0f%n",
                     reservaId.substring(0,8), monto);
+            // Notificar a BusquedaServer que el asiento está ocupado
+            notificarAsientoOcupado(r.getViajeId(), r.getNumeroAsiento());
         } else {
             cancelarReservaInterna(r);
             System.out.printf("[ReservaServer] Pago RECHAZADO: %s — asiento liberado%n",
@@ -201,6 +205,8 @@ public class ReservaServer {
     private void cancelarReservaInterna(Reserva r) {
         r.setEstado(Reserva.Estado.CANCELADA);
         estadoAsientos.put(r.getViajeId() + "-" + r.getNumeroAsiento(), true);
+        // Notificar a BusquedaServer que el asiento está disponible
+        notificarAsientoLiberado(r.getViajeId(), r.getNumeroAsiento());
     }
  
     // Función programada que se ejecuta cada minuto para limpiar reservas pendientes que hayan expirado (no confirmadas en 15 minutos). Cambia su estado a EXPIRADA y libera el asiento.
@@ -243,6 +249,40 @@ public class ReservaServer {
         try { Thread.sleep(200 + (long)(Math.random() * 600)); }
         catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         return Math.random() < 0.90; // 90% de aprobación
+    }
+
+    // Función que notifica a BusquedaServer que un asiento está ocupado (reserva confirmada)
+    private void notificarAsientoOcupado(int viajeId, int asiento) {
+        try (Socket socket = new Socket(HOST_BUSQUEDA, PUERTO_BUSQUEDA);
+             ObjectOutputStream salida = new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream())) {
+            Mensaje solicitud = new Mensaje(Mensaje.MARCAR_ASIENTO_OCUPADO, viajeId, asiento);
+            salida.writeObject(solicitud);
+            salida.flush();
+            Mensaje respuesta = (Mensaje) entrada.readObject();
+            if (!respuesta.esOk()) {
+                System.err.println("[ReservaServer] Error notificando asiento ocupado: " + respuesta.getMensajeError());
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("[ReservaServer] Error al notificar a BusquedaServer: " + e.getMessage());
+        }
+    }
+    
+    // Función que notifica a BusquedaServer que un asiento está liberado (reserva cancelada)
+    private void notificarAsientoLiberado(int viajeId, int asiento) {
+        try (Socket socket = new Socket(HOST_BUSQUEDA, PUERTO_BUSQUEDA);
+             ObjectOutputStream salida = new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream entrada = new ObjectInputStream(socket.getInputStream())) {
+            Mensaje solicitud = new Mensaje(Mensaje.LIBERAR_ASIENTO, viajeId, asiento);
+            salida.writeObject(solicitud);
+            salida.flush();
+            Mensaje respuesta = (Mensaje) entrada.readObject();
+            if (!respuesta.esOk()) {
+                System.err.println("[ReservaServer] Error notificando asiento liberado: " + respuesta.getMensajeError());
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("[ReservaServer] Error al notificar a BusquedaServer: " + e.getMessage());
+        }
     }
  
     private void inicializarAsientos() {

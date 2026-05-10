@@ -96,34 +96,43 @@ public class TerminalInteractivo {
                     continue;
                 }
  
-                // Paso 6: datos del pasajero
+               // Paso 6a: pedir RUT y crear reserva de inmediato (bloquea el asiento)
                 System.out.println();
-                System.out.println(NEGRITA + "  Datos del pasajero" + RESET);
-                String rut      = pedirTexto("  RUT (ej: 12345678-9): ");
-                String nombre   = pedirTexto("  Nombre             : ");
-                String apellido = pedirTexto("  Apellido           : ");
-                String email    = pedirTexto("  Email              : ");
-                Pasajero pasajero = new Pasajero(rut, nombre, apellido, email);
- 
-                // Paso 7: crear reserva
+                System.out.println(NEGRITA + "  Reservando asiento..." + RESET);
+                String rut = pedirTexto("  RUT (ej: 12345678-9): ");
+                
+                // Crear Pasajero con RUT solamente (esto bloquea el asiento)
+                Pasajero pasajero = new Pasajero(rut, "", "", "");
+                
                 System.out.println(CYAN + "\n  Creando reserva..." + RESET);
                 Reserva reserva = (Reserva) enviarMensaje(
                         HOST_RESERVAS, PUERTO_RESERVAS,
                         new Mensaje(Mensaje.CREAR_RESERVA, viaje.getId(), asiento, pasajero));
+                
+                System.out.println(VERDE + "\n  ✓ Asiento bloqueado. Tiene 10 minutos para completar la compra." + RESET);
+                System.out.println("  ID de reserva: " + reserva.getId());
  
-                System.out.println(VERDE + "\n  Reserva creada. Tiene 10 minutos para pagar." + RESET);
-                System.out.println("  ID : " + reserva.getId());
-                System.out.printf ("  Monto : $%.0f%n", viaje.getPrecio());
+                // Paso 6b: pedir resto de datos del pasajero (el asiento ya está bloqueado)
+                System.out.println();
+                System.out.println(NEGRITA + "  Datos del pasajero" + RESET);
+                String nombre   = pedirTexto("  Nombre             : ");
+                String apellido = pedirTexto("  Apellido           : ");
+                String email    = pedirTexto("  Email              : ");
+                
+                // Actualizar los datos del pasajero en memoria (no se envía al servidor hasta el pago)
+                pasajero = new Pasajero(rut, nombre, apellido, email);
  
-                // Paso 8: pago y ticket
+                // Paso 7: confirmar medio de pago
                 System.out.println();
                 System.out.println(NEGRITA + "  Medio de pago:" + RESET);
+                System.out.printf("  Monto a pagar      : $%.0f%n", viaje.getPrecio());
                 System.out.println("    1. WebPay");
                 System.out.println("    2. Débito");
                 System.out.println("    3. Efectivo");
                 int opPago = pedirOpcion("  Seleccione (#)     : ", 1, 3);
                 String medioPago = new String[]{"webpay","debito","efectivo"}[opPago - 1];
  
+                // Paso 8: procesar pago
                 System.out.println(CYAN + "\n  Procesando pago..." + RESET);
                 Boolean pagado = (Boolean) enviarMensaje(
                         HOST_RESERVAS, PUERTO_RESERVAS,

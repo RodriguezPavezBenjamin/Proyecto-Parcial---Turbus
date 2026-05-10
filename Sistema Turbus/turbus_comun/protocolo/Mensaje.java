@@ -29,6 +29,10 @@ public class Mensaje implements Serializable {
     public static final String CONFIRMAR_PAGO      = "CONFIRMAR_PAGO";
     public static final String CANCELAR_RESERVA    = "CANCELAR_RESERVA";
     public static final String CONSULTAR_RESERVA   = "CONSULTAR_RESERVA";
+
+    // Tipos de operación para sincronizar asientos entre ReservaServer y BusquedaServer
+    public static final String MARCAR_ASIENTO_OCUPADO = "MARCAR_ASIENTO_OCUPADO";
+    public static final String LIBERAR_ASIENTO        = "LIBERAR_ASIENTO";
  
     // Tipos de respuesta (servidor → cliente)
     public static final String RESPUESTA_OK        = "OK";

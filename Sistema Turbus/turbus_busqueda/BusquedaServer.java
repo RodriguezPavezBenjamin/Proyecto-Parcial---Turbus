@@ -101,6 +101,14 @@ public class BusquedaServer {
                         List<String> rutas = listarRutas();
                         yield Mensaje.ok(new ArrayList<>(rutas));
                     }
+                    case Mensaje.MARCAR_ASIENTO_OCUPADO -> {
+                        marcarAsientoOcupado((Integer) p[0], (Integer) p[1]);
+                        yield Mensaje.ok(Boolean.TRUE);
+                    }
+                    case Mensaje.LIBERAR_ASIENTO -> {
+                        liberarAsiento((Integer) p[0], (Integer) p[1]);
+                        yield Mensaje.ok(Boolean.TRUE);
+                    }
                     case Mensaje.PING -> Mensaje.ok(Boolean.TRUE);
                     default -> Mensaje.error("Operación desconocida: " + sol.getTipo());
                 };
