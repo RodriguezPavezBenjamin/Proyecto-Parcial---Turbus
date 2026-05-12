@@ -19,11 +19,6 @@ Este proyecto implementa los requisitos técnicos solicitados en la asignatura:
 * **Tolerancia a Fallos:** Manejo de excepciones por fallos de red (Crash/Omisión) aislando los errores de red de los clientes para mantener el servidor vivo, y por lógica del negocio (asiento ocupado/reserva no encontrada).
 * **Transparencia de acceso y ubicación:** El cliente opera sin necesidad de conocer el mecanismo o dónde opera la arquitectura subyacente.
 
-## Como ejecutar...
-1. Iniciar el servidor central ejecutando `TurbusServer.java` (escucha en el puerto 5000).
-2. Levantar los terminales de venta ejecutando múltiples instancias de `TurbusClient.java`.
-3. Ingresar el número de asiento a reservar en las consolas de los clientes.
-
 ## Como ejecutar... (carpeta 'Sistema Turbus')
 1. Iniciar el servidor de reservas `ReservaServer.java`, ubicado en la carpeta `Sistema Turbus\turbus_reserva`.
 2. Iniciar el servidor de búsqueda `BusquedaServer.java`, ubicado en `Sistema Turbus\turbus_busqueda`.
