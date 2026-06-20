@@ -33,6 +33,14 @@ public class Mensaje implements Serializable {
     // Tipos de operación para sincronizar asientos entre ReservaServer y BusquedaServer
     public static final String MARCAR_ASIENTO_OCUPADO = "MARCAR_ASIENTO_OCUPADO";
     public static final String LIBERAR_ASIENTO        = "LIBERAR_ASIENTO";
+
+    // Tipos de operación para Coordinación Distribuida (Algoritmo Bully) y replicación
+    public static final String ELECTION            = "ELECTION";
+    public static final String OK_ELECTION         = "OK_ELECTION";
+    public static final String COORDINATOR         = "COORDINATOR";
+    public static final String FORWARD_RESERVA     = "FORWARD_RESERVA";
+    public static final String FORWARD_PAGO        = "FORWARD_PAGO";
+    public static final String SYNC_RESERVA        = "SYNC_RESERVA";
  
     // Tipos de respuesta (servidor → cliente)
     public static final String RESPUESTA_OK        = "OK";
@@ -44,6 +52,9 @@ public class Mensaje implements Serializable {
     private final Object[] parametros;  // argumentos de la operación
     private final Object resultado;     // payload de la respuesta
     private final String mensajeError;  // descripción si tipo=ERROR
+    
+    // Reloj Lógico de Lamport
+    private int relojLamport = 0;
  
     // Constructor para REQUEST (cliente → servidor)
     public Mensaje(String tipo, Object... parametros) {
@@ -81,6 +92,10 @@ public class Mensaje implements Serializable {
     public Object[] getParametros()   { return parametros; }
     public Object getResultado()      { return resultado; }
     public String getMensajeError()   { return mensajeError; }
+    
+    // Getter y Setter para Reloj de Lamport
+    public int getRelojLamport() { return relojLamport; }
+    public void setRelojLamport(int relojLamport) { this.relojLamport = relojLamport; }
  
     // Métodos de conveniencia para verificar el tipo de mensaje.
     public boolean esOk()             { return RESPUESTA_OK.equals(tipo); }
