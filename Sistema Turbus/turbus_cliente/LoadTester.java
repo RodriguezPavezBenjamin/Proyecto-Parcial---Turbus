@@ -166,6 +166,19 @@ public class LoadTester {
             System.out.printf("  Latencia Promedio    : %.2f ms%n", avg);
             System.out.printf("  Latencia p95         : %d ms%n", p95);
             System.out.printf("  Latencia Máxima      : %d ms%n", max);
+            
+            // Exportar datos a CSV para generar gráficas en Excel
+            try (PrintWriter writer = new PrintWriter(new File("latencias.csv"))) {
+                writer.println("Peticion,Latencia_ms");
+                int idx = 1;
+                // Escribir la latencia original en el orden en que ocurrieron (usando latencias, no latList que está ordenada)
+                for (Long l : latencias) {
+                    writer.println(idx++ + "," + l);
+                }
+                System.out.println("  -> Se ha exportado 'latencias.csv' con los datos crudos para tus gráficas.");
+            } catch (FileNotFoundException e) {
+                System.out.println("  -> No se pudo generar latencias.csv");
+            }
         }
         System.out.println("==============================================");
     }

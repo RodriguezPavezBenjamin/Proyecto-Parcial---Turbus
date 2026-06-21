@@ -1,0 +1,26 @@
+==============================================
+  Turbus - Generador de Carga (Load Tester)
+  Hilos Concurrentes : 50
+  Duración de Prueba : 60 segundos
+==============================================
+Iniciando prueba de carga...
+  Progresando... 10 segundos completados.
+  Progresando... 20 segundos completados.
+  Progresando... 30 segundos completados.
+  Progresando... 40 segundos completados.
+  Progresando... 50 segundos completados.
+Deteniendo hilos de carga. Esto puede tardar unos segundos...
+
+==============================================
+  RESULTADOS DE LA PRUEBA DE CARGA
+==============================================
+  Total de peticiones  : 19176
+  Peticiones exitosas  : 19176
+  Errores (caídas red) : 0 (0,00%)
+  Throughput           : 319,60 peticiones/seg
+  Latencia Mínima      : 0 ms
+  Latencia Promedio    : 3,05 ms
+  Latencia p95         : 6 ms
+  Latencia Máxima      : 314 ms
+  -> Se ha exportado 'latencias.csv' con los datos crudos para tus gráficas.
+==============================================

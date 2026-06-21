@@ -1,0 +1,31 @@
+[Nodo-1 | T: 124995] ¡ALERTA! Coordinador 3 caído o no responde. Iniciando nueva elección...
+[Nodo-1 | T: 124995] Iniciando elección (Algoritmo Bully)...
+[Nodo-1 | T: 125001] Op 'COORDINATOR' recibida
+[Nodo-1 | T: 125001] Nodo 2 aceptado como COORDINADOR.
+
+==============================================
+  Turbus - Generador de Carga (Load Tester)
+  Hilos Concurrentes : 50
+  Duración de Prueba : 60 segundos
+==============================================
+Iniciando prueba de carga...
+  Progresando... 10 segundos completados.
+  Progresando... 20 segundos completados.
+  Progresando... 30 segundos completados.
+  Progresando... 40 segundos completados.
+  Progresando... 50 segundos completados.
+Deteniendo hilos de carga. Esto puede tardar unos segundos...
+
+==============================================
+  RESULTADOS DE LA PRUEBA DE CARGA
+==============================================
+  Total de peticiones  : 19228
+  Peticiones exitosas  : 14536
+  Errores (caídas red) : 4692 (24,40%)
+  Throughput           : 320,47 peticiones/seg
+  Latencia Mínima      : 0 ms
+  Latencia Promedio    : 1,87 ms
+  Latencia p95         : 4 ms
+  Latencia Máxima      : 318 ms
+  -> Se ha exportado 'latencias.csv' con los datos crudos para tus gráficas.
+==============================================
