@@ -24,10 +24,8 @@ import turbus_comun.protocolo.NegocioException;
  */
 public class TerminalInteractivo {
  
-    private static final String HOST_BUSQUEDA   = "localhost";
-    private static final String HOST_RESERVAS   = "localhost";
-    private static final int    PUERTO_BUSQUEDA = 9001;
-    private static final int    PUERTO_RESERVAS = 9002;
+    private static final String HOST = "localhost";
+    private static final int[] PUERTOS_NODOS = {8001, 8002, 8003}; // Puertos de los nodos del sistema (se probarán en orden para tolerancia a fallos)
  
     private static final String RESET    = "\u001B[0m";
     private static final String VERDE    = "\u001B[32m";
@@ -37,6 +35,9 @@ public class TerminalInteractivo {
     private static final String NEGRITA  = "\u001B[1m";
  
     private final Scanner scanner = new Scanner(System.in);
+    
+    // Reloj Lógico de Lamport (cliente)
+    private int relojLamport = 0;
  
     public static void main(String[] args) {
         new TerminalInteractivo().ejecutar();
@@ -62,7 +63,6 @@ public class TerminalInteractivo {
  
                 @SuppressWarnings("unchecked")
                 List<Viaje> viajes = (List<Viaje>) enviarMensaje(
-                        HOST_BUSQUEDA, PUERTO_BUSQUEDA,
                         new Mensaje(Mensaje.BUSCAR_VIAJES, origen, destino, fecha));
  
                 if (viajes.isEmpty()) {
@@ -84,7 +84,6 @@ public class TerminalInteractivo {
                 // BusquedaServer solo sabe cuántos hay en total, no cuáles están reservados.
                 @SuppressWarnings("unchecked")
                 Map<Integer, Boolean> asientos = (Map<Integer, Boolean>) enviarMensaje(
-                        HOST_RESERVAS, PUERTO_RESERVAS,
                         new Mensaje(Mensaje.CONSULTAR_ASIENTOS, viaje.getId()));
  
                 mostrarMapaAsientos(asientos, viaje);
@@ -106,7 +105,6 @@ public class TerminalInteractivo {
                 
                 System.out.println(CYAN + "\n  Creando reserva..." + RESET);
                 Reserva reserva = (Reserva) enviarMensaje(
-                        HOST_RESERVAS, PUERTO_RESERVAS,
                         new Mensaje(Mensaje.CREAR_RESERVA, viaje.getId(), asiento, pasajero));
                 
                 System.out.println(VERDE + "\n  ✓ Asiento bloqueado. Tiene 10 minutos para completar la compra." + RESET);
@@ -135,7 +133,6 @@ public class TerminalInteractivo {
                 // Paso 8: procesar pago
                 System.out.println(CYAN + "\n  Procesando pago..." + RESET);
                 Boolean pagado = (Boolean) enviarMensaje(
-                        HOST_RESERVAS, PUERTO_RESERVAS,
                         new Mensaje(Mensaje.CONFIRMAR_PAGO,
                                 reserva.getId(), viaje.getPrecio(), medioPago));
  
@@ -168,7 +165,6 @@ public class TerminalInteractivo {
         try {
             @SuppressWarnings("unchecked")
             List<String> rutas = (List<String>) enviarMensaje(
-                    HOST_BUSQUEDA, PUERTO_BUSQUEDA,
                     new Mensaje(Mensaje.LISTAR_RUTAS));
  
             System.out.println(NEGRITA + "  Rutas y fechas disponibles:" + RESET);
@@ -255,7 +251,7 @@ public class TerminalInteractivo {
         System.out.println(CYAN + NEGRITA);
         System.out.println("  ╔════════════════════════════════════════╗");
         System.out.println("  ║    TURBUS — Reserva de pasajes         ║");
-        System.out.println("  ║    Sistema Distribuido · Puerto 9001   ║");
+        System.out.println("  ║    Sistema Distribuido · Nodos Activos ║");
         System.out.println("  ╚════════════════════════════════════════╝");
         System.out.println(RESET);
     }
@@ -302,20 +298,30 @@ public class TerminalInteractivo {
         System.out.flush();
     }
  
-    // Función para enviar un mensaje a través de TCP y recibir una respuesta.
-    private Object enviarMensaje(String host, int puerto, Mensaje solicitud)
-            throws IOException, NegocioException {
-        try (Socket socket = new Socket(host, puerto);
-             ObjectOutputStream salida = new ObjectOutputStream(socket.getOutputStream());
-             ObjectInputStream  entrada = new ObjectInputStream(socket.getInputStream())) {
-            salida.writeObject(solicitud);
-            salida.flush();
-            Mensaje r = (Mensaje) entrada.readObject();
-            if (r.esOk())           return r.getResultado();
-            if (r.esErrorNegocio()) throw new NegocioException(r.getMensajeError());
-            throw new IOException("Error servidor: " + r.getMensajeError());
-        } catch (ClassNotFoundException e) {
-            throw new IOException("Protocolo incompatible: " + e.getMessage());
+    // Función para enviar un mensaje a través de TCP probando nodos disponibles.
+    private Object enviarMensaje(Mensaje solicitud) throws IOException, NegocioException {
+        // Incrementar el reloj lógico antes de enviar
+        relojLamport++;
+        solicitud.setRelojLamport(relojLamport);
+        
+        for (int puerto : PUERTOS_NODOS) {
+            try (Socket socket = new Socket(HOST, puerto);
+                 ObjectOutputStream salida = new ObjectOutputStream(socket.getOutputStream());
+                 ObjectInputStream  entrada = new ObjectInputStream(socket.getInputStream())) {
+                salida.writeObject(solicitud);
+                salida.flush();
+                Mensaje r = (Mensaje) entrada.readObject();
+                
+                // Actualizar reloj lógico al recibir la respuesta
+                relojLamport = Math.max(relojLamport, r.getRelojLamport()) + 1;
+                
+                if (r.esOk())           return r.getResultado();
+                if (r.esErrorNegocio()) throw new NegocioException(r.getMensajeError());
+                throw new IOException("Error servidor: " + r.getMensajeError());
+            } catch (IOException | ClassNotFoundException e) {
+                // Intentar con el siguiente nodo
+            }
         }
+        throw new IOException("No se pudo conectar con ningún nodo de la red.");
     }
 }
